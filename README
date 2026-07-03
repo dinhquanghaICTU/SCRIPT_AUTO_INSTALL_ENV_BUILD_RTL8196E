@@ -139,8 +139,4 @@ Sau khi source đã được clone, luôn đọc file:
 ~/SDK_KERNEL_ROOTFS_BOOTLOADER_RTL8196E/STEP_BULD_APP.md
 ```
 
-Mở bằng lệnh:
 
-```bash
-less ~/SDK_KERNEL_ROOTFS_BOOTLOADER_RTL8196E/STEP_BULD_APP.md
-```
