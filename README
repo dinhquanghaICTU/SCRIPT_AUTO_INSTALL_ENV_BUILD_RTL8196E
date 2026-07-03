@@ -1,0 +1,146 @@
+# SCRIPT AUTO INSTALL ENV VÀ BUILD APP RTL8196E
+
+Thư mục này chứa script tự động clone source, cài môi trường cross compile cho RTL8196E và build app mẫu `led_blink`.
+
+> **Cần đọc:** sau khi script clone source xong, mở file `STEP_BULD_APP.md` trong source để đọc hướng dẫn đầy đủ về cách build thủ công, deploy app, debug UART và test Zigbee.
+
+```bash
+less ~/SDK_KERNEL_ROOTFS_BOOTLOADER_RTL8196E/STEP_BULD_APP.md
+```
+
+## Cây thư mục
+
+Trước khi chạy script:
+
+```text
+SCRIPT_AUTO_INSTALL_ENV_BUILD_RTL8196E/
+├── README
+└── quangha_auto_build.sh
+```
+
+Sau khi chạy script với cấu hình mặc định:
+
+```text
+~/SDK_KERNEL_ROOTFS_BOOTLOADER_RTL8196E/
+├── 1-Build-Environment/          # Script cài dependency và build toolchain
+├── 2-Zigbee-Radio-Silabs-EFR32/ # Source và firmware Zigbee
+├── 3-Main-SoC-Realtek-RTL8196E/ # Bootloader, kernel, rootfs và userdata
+├── APP_EXAMPLE/
+│   ├── main.cpp                  # Source app blink LED
+│   └── led_blink                 # App sau khi build thành công
+├── STEP_BULD_APP.md              # Hướng dẫn sử dụng chi tiết, cần đọc
+├── downloads/                    # Cache source Linux 6.16
+└── x-tools/
+    └── mips-lexra-linux-musl/    # Lexra MIPS cross toolchain
+```
+
+## Yêu cầu
+
+- Ubuntu 22.04 hoặc WSL2 Ubuntu 22.04.
+- Có kết nối Internet để clone source và tải các dependency.
+- Tài khoản hiện tại có quyền sử dụng `sudo`.
+- Cần khoảng 4 GB dung lượng trống.
+- Quá trình cài môi trường và build toolchain có thể mất khoảng 30 phút hoặc lâu hơn tùy vào mạng và cấu hình máy.
+
+## Cách chạy script
+
+Di chuyển vào thư mục chứa script:
+
+```bash
+cd ~/WORK/SCRIPT_AUTO_INSTALL_ENV_BUILD_RTL8196E
+```
+
+Cấp quyền thực thi:
+
+```bash
+chmod +x quangha_auto_build.sh
+```
+
+
+Chạy với cấu hình mặc định:
+
+```bash
+./quangha_auto_build.sh
+```
+
+Script sẽ tự thực hiện các bước:
+
+1. Clone source về `~/SDK_KERNEL_ROOTFS_BOOTLOADER_RTL8196E` nếu source chưa tồn tại.
+2. Chuẩn bị cache source Linux 6.16.
+3. Cài dependency và build Lexra MIPS toolchain.
+4. Cross compile `APP_EXAMPLE/main.cpp`.
+5. Tạo app `APP_EXAMPLE/led_blink`.
+
+> **Lưu ý sudo:** chạy `quangha_auto_build.sh` bằng user thường, không chạy cả script bằng `sudo`. Script sẽ tự gọi `sudo` ở bước cài môi trường; nhập mật khẩu sudo khi được hỏi.
+
+## Chọn thư mục source khác
+
+```bash
+./quangha_auto_build.sh \
+  --project-dir "$HOME/WORK/SDK_KERNEL_ROOTFS_BOOTLOADER_RTL8196E"
+```
+
+## Build và deploy lên board
+
+Board mặc định sử dụng:
+
+```text
+IP:       192.168.1.88
+Username: root
+Password: root
+```
+
+Build, copy và chạy app trên board mặc định:
+
+
+Script deploy sẽ copy app vào `/tmp/led_blink` và chạy app ở chế độ nền trên board.
+
+Nếu muốn copy và chạy thủ công:
+
+```bash
+cd ~/SDK_KERNEL_ROOTFS_BOOTLOADER_RTL8196E/APP_EXAMPLE
+scp led_blink root@192.168.1.88:/tmp/
+ssh root@192.168.1.88
+```
+
+Sau khi SSH vào board:
+
+```sh
+cd /tmp
+chmod +x led_blink
+echo none > /sys/class/leds/status/trigger
+./led_blink
+```
+
+- LED đỏ sẽ nháy sau khi app chạy.
+- Nhấn `Ctrl+C` để dừng app nếu chạy trực tiếp.
+
+## Test kết nối Zigbee
+
+Chạy trên máy host:
+
+```bash
+nc -zv 192.168.1.88 8888
+```
+
+Nếu hiển thị `succeeded` hoặc `open` thì cổng Zigbee UART bridge `8888` trên board đang hoạt động.
+
+## Lưu ý UART và SSH
+
+> **Lưu ý debug UART:** nếu cần debug UART thì cắm CH340 và sử dụng baud `38400`.
+
+> **Lưu ý SSH:** nếu lúc SSH mà không cần debug UART thì rút dây GND của CH340 ra. Nếu vẫn cắm GND CH340, board có thể bị không đủ nguồn nên reboot liên tục và không thể SSH được.
+
+## Đọc hướng dẫn chi tiết
+
+Sau khi source đã được clone, luôn đọc file:
+
+```text
+~/SDK_KERNEL_ROOTFS_BOOTLOADER_RTL8196E/STEP_BULD_APP.md
+```
+
+Mở bằng lệnh:
+
+```bash
+less ~/SDK_KERNEL_ROOTFS_BOOTLOADER_RTL8196E/STEP_BULD_APP.md
+```
